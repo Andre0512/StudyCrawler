@@ -1,6 +1,7 @@
 import html
 import json
 import logging
+import hashlib
 import re
 import time
 from telegram import Bot
@@ -9,7 +10,6 @@ import requests
 from secrets import *
 
 # TODO: Comments
-# TODO: Remove sensitive data
 # TODO: More dynamic
 # TODO: Download password protected files
 
@@ -109,6 +109,21 @@ def save_data(data):
         json.dump(data, outfile, indent=4)
 
 
+def check_schedule(data):
+    response = requests.get(SCHEDULE)
+    pdf = './downloads/{}'.format(re.findall('^.*/(.*?\.pdf)$', SCHEDULE)[0])
+    with open(pdf, 'wb') as f:
+        f.write(response.content)
+    schedule_hash = hashlib.md5(open(pdf, 'rb').read()).hexdigest()
+    if 'schedule' not in data or not data['schedule'] == schedule_hash:
+        data['schedule'] = schedule_hash
+        bot = Bot(BOTTOKEN)
+        bot.sendDocument(chat_id=CHAT_ID if not DEBUG else TEST_ID,
+                         document=open(os.path.join(os.path.dirname(__file__), pdf), 'rb'),
+                         caption='Ein neuer Stundenplan ist online! 👆', timeout=60)
+    return data
+
+
 def main():
     data = load_data()
     with requests.Session() as session:
@@ -117,6 +132,7 @@ def main():
         stuff = get_file_list(session, course_dict)
         send_list = download(session, stuff, data)
         data = send_data(send_list, data)
+    data = check_schedule(data)
     save_data(data)
 
 
