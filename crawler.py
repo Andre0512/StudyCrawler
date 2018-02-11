@@ -34,7 +34,7 @@ def login(session):
     response = session.post('{}/rz/userauthLDAPwhs.php'.format(CAMPUSURL), data=payload)
     sid = re.findall('PHPSESSID=([^;]*);', response.headers['Set-Cookie'])[0]
     session.get('{}/rz/login/content.php?'.format(CAMPUSURL) + sid)
-    session.get('{}/rz/login/tostudywise1718.php?sid='.format(CAMPUSURL) + sid)
+    session.get('{}/rz/login/tostudy{}.php?sid='.format(CAMPUSURL, SEMESTER[-1]) + sid)
     session.get('{}/mystudy32/login/senduser_rac.php?sid='.format(CAMPUSURL) + sid)
     path = re.findall("URL=(start_session.php.*)'>$", session.get(
         '{}/mystudy32/login/valid.php?PHPSESSID='.format(CAMPUSURL) + sid).text)[0]
