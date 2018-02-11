@@ -124,6 +124,24 @@ def check_schedule(data):
     return data
 
 
+def get_exams_data():
+    payload = {'asdf': USERNAME, 'fdsa': PASSWORD, 'submit': 'Anmelden'}
+    with requests.Session() as session:
+        response = session.post(
+            '{}/rds?state=user&type=1&category=auth.login&startpage=portal.vm&breadCrumbSource=portal'.format(EXAMSURL),
+            data=payload)
+        url = re.findall('<a href="([^"]*)" class="auflistung " target=\'_self\'>Prüfungsverwaltung', response.text)[0]
+        response = session.get(url.replace('&amp;', '&'))
+        url = re.findall('<a href="([^"]*)" {2}title="" class="auflistung">Notenspiegel</a>', response.text)[0]
+        response = session.get(url.replace('&amp;', '&'))
+        url = re.findall('<a href="([^"]*)" title="Leistungen für Abschluss', response.text)[0]
+        response = session.get(url.replace('&amp;', '&'))
+    state = re.findall('<tr>[ \n\t]*?<td[^>]*>[ \n\t]*?[0-9]*[ \n\t]*?</td>[ \n\t]*?<td[^>]*>[ \n\t]*(.*?)[ \n\t]*?' +
+                       '</td>[ \n\t]*?<td[^>]*>[ \n\t]*?.*?[ \n\t]*?</td>[ \n\t]*?<td[^>]*>[ \n\t]*?.*?[ \n\t]*?' +
+                       '</td>[ \n\t]*?<td[^>]*>[ \n\t]*(.*?)[ \n\t]*?</td>', response.text, re.DOTALL)
+    return state
+
+
 def main():
     data = load_data()
     with requests.Session() as session:
@@ -132,6 +150,8 @@ def main():
         stuff = get_file_list(session, course_dict)
         send_list = download(session, stuff, data)
         data = send_data(send_list, data)
+    exam_data = get_exams_data()
+    print(exam_data)
     data = check_schedule(data)
     save_data(data)
 
