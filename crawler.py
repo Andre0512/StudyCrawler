@@ -4,7 +4,7 @@ import logging
 import hashlib
 import re
 import time
-from telegram import Bot
+from telegram import Bot, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 import os
 import requests
 from secrets import *
@@ -142,6 +142,26 @@ def get_exams_data():
     return state
 
 
+def check_exams(data, exams):
+    if not 'exams' in data:
+        data['exams'] = {}
+        for exam in exams:
+            data['exams'][exam[0]] = exam[1]
+        return data
+    for exam in exams:
+        if exam[0] not in data['exams']:
+            data['exams'][exam[0]] = exam[1]
+        if data['exams'][exam[0]] == 'angemeldet' and not exam[1] == 'angemeldet':
+            data['exams'][exam[0]] = exam[1]
+            bot = Bot(BOTTOKEN)
+            bot.sendMessage(chat_id=CHAT_ID if not DEBUG else TEST_ID,
+                            text='*Achtung!*\nDer Prüfungsstatus von *{}* hat sich geändert! 😁'.format(exam[0]),
+                            timeout=60, parse_mode=ParseMode.MARKDOWN,
+                            reply_markup=InlineKeyboardMarkup(
+                                [[InlineKeyboardButton('Nachschauen 😰', url=EXAMSURL[:-9])]]))
+    return data
+
+
 def main():
     data = load_data()
     with requests.Session() as session:
@@ -151,7 +171,7 @@ def main():
         send_list = download(session, stuff, data)
         data = send_data(send_list, data)
     exam_data = get_exams_data()
-    print(exam_data)
+    data = check_exams(data, exam_data)
     data = check_schedule(data)
     save_data(data)
 
