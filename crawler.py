@@ -19,8 +19,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 # Load json-data with already sent files
 def load_data():
-    with open(os.path.join(os.path.dirname(__file__), 'data.json')) as data_file:
-        data = json.load(data_file)
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'data.json')) as data_file:
+            data = json.load(data_file)
+    except FileNotFoundError:
+        data = {}
     return data
 
 
@@ -72,6 +75,8 @@ def download(session, stuff, data):
                 payload, stream=True)
             if r.status_code == 200:
                 send_list.append([html.unescape(file[2]), file[1], html.unescape(file[3]), file[0], file[4]])
+                if not os.path.isdir(os.path.join(os.path.dirname(__file__), './downloads/')):
+                    os.mkdir(os.path.join(os.path.dirname(__file__), './downloads/'))
                 if not os.path.isdir(os.path.join(os.path.dirname(__file__), './downloads/{}'.format(file[2]))):
                     os.mkdir(os.path.join(os.path.dirname(__file__), './downloads/{}'.format(file[2])))
                 with open(os.path.join(os.path.dirname(__file__), './downloads/{}/{}'.format(file[2], file[1])),
