@@ -1,0 +1,6 @@
+venv/
+.idea/
+downloads/
+__pycache__/
+secrets.py
+data.json
