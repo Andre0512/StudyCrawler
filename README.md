@@ -10,7 +10,6 @@
 _This crawler was created for the RheinAhrCampus of the Hochschule Koblenz and only tested there. 
 Maybe parts work at other German universities with similar portals, but I don't know._
 
-![Screenshot](img/screenshot.jpg?raw=true "Telegram Channel")
 
 ## Installation (Linux)
 
@@ -30,3 +29,7 @@ This is a bit tricky, contact me if you have any questions.
 ## License
 
 This project is under MIT-License. Have fun :)
+
+## Screenshot
+
+![Screenshot](img/screenshot.png?raw=true "Telegram Channel")
