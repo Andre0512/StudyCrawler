@@ -136,26 +136,40 @@ def get_exams_data():
         response = session.get(url.replace('&amp;', '&'))
         url = re.findall('<a href="([^"]*)" title="Leistungen für Abschluss', response.text)[0]
         response = session.get(url.replace('&amp;', '&'))
-    state = re.findall('<tr>[ \n\t]*?<td[^>]*>[ \n\t]*?[0-9]*[ \n\t]*?</td>[ \n\t]*?<td[^>]*>[ \n\t]*(.*?)[ \n\t]*?' +
-                       '</td>[ \n\t]*?<td[^>]*>[ \n\t]*?.*?[ \n\t]*?</td>[ \n\t]*?<td[^>]*>[ \n\t]*?.*?[ \n\t]*?' +
-                       '</td>[ \n\t]*?<td[^>]*>[ \n\t]*(.*?)[ \n\t]*?</td>', response.text, re.DOTALL)
+    regex = re.compile(r"""<tr>                  # Row
+             \s*?    <td[^>]*>                   # 1. column (<td>) with any attribute
+             \s*?        [0-9]*                  # Must contain number
+             \s*?    </td>                       # Closing 1. column (</td>)
+             \s*?    <td[^>]*>                   # 2. column
+             \s*         (?P<course>.*?)         # Matches content of this column as course
+             \s*?    </td>
+             \s*?    <td[^>]*>                   # 3. column
+             \s*?        .*?                     # Any content
+             \s*?    </td>
+             \s*?    <td[^>]*>                   # 4. column
+             \s*?        (?:\s|.)*?              # Any content incl. any whitespace
+             \s*?    <td[^>]*>                   # 5. column
+             \s*         (?P<state>.*?)          # Matches state as state
+             \s*?    </td>""", re.X)
+    state = [m.groupdict() for m in regex.finditer(response.text)]
     return state
 
 
 def check_exams(data, exams):
-    if not 'exams' in data:
+    print(exams)
+    if 'exams' not in data:
         data['exams'] = {}
         for exam in exams:
-            data['exams'][exam[0]] = exam[1]
+            data['exams'][exam['course']] = exam['state']
         return data
     for exam in exams:
-        if exam[0] not in data['exams']:
-            data['exams'][exam[0]] = exam[1]
-        if data['exams'][exam[0]] == 'angemeldet' and not exam[1] == 'angemeldet':
-            data['exams'][exam[0]] = exam[1]
+        if exam['course'] not in data['exams']:
+            data['exams'][exam['course']] = exam['state']
+        if data['exams'][exam['course']] == 'angemeldet' and not exam['state'] == 'angemeldet':
+            data['exams'][exam['course']] = exam['state']
             bot = Bot(BOTTOKEN)
             bot.sendMessage(chat_id=CHAT_ID if not DEBUG else TEST_ID,
-                            text='*Achtung!*\nDer Prüfungsstatus von *{}* hat sich geändert! 😁'.format(exam[0]),
+                            text='*Achtung!*\nDer Prüfungsstatus von *{}* hat sich geändert! 😱'.format(exam['course']),
                             timeout=60, parse_mode=ParseMode.MARKDOWN,
                             reply_markup=InlineKeyboardMarkup(
                                 [[InlineKeyboardButton('Nachschauen 😰', url=EXAMSURL[:-9])]]))
