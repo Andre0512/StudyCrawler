@@ -7,8 +7,8 @@
 * Sending a notification if the state of an exam has changed on the exam server
 * Sending schedule if a new version is online
 
-_This crawler was created for the RheinAhrCampus of the University of Applied Sciences Koblenz and only tested there. 
-Maybe parts work at other German universities with similar portals, but I do not know._
+_This crawler was created for the RheinAhrCampus of the Hochschule Koblenz and only tested there. 
+Maybe parts work at other German universities with similar portals, but I don't know._
 
 ## Installation (Linux)
 
@@ -23,3 +23,8 @@ Maybe parts work at other German universities with similar portals, but I do not
 This is a bit tricky, contact me if you have any questions.
 5. Create entry in `/etc/crontab` to execute script every three minutes  
 `echo "*/3 *   * * *   $USER   $PWD/venv/bin/python3 $PWD/crawler.py" | sudo tee --append /etc/crontab`
+
+
+## License
+
+This project is under MIT-License. Have fun :)
