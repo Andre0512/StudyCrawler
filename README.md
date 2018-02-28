@@ -10,6 +10,8 @@
 _This crawler was created for the RheinAhrCampus of the Hochschule Koblenz and only tested there. 
 Maybe parts work at other German universities with similar portals, but I don't know._
 
+![Screenshot](img/screenshot.jpg?raw=true "Telegram Channel")
+
 ## Installation (Linux)
 
 1. Download script  
