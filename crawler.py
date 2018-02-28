@@ -1,16 +1,17 @@
 import html
 import json
 import logging
-import hashlib
-import re
 import time
-from telegram import Bot, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+
+import hashlib
 import os
+import re
 import requests
+from telegram import Bot, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+
 from secrets import *
 
 # TODO: Comments
-# TODO: More dynamic
 # TODO: Download password protected files
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -36,18 +37,16 @@ def login(session):
     session.get('{}/rz/login/content.php?'.format(CAMPUSURL) + sid)
     session.get('{}/rz/login/tostudy{}.php?sid='.format(CAMPUSURL, SEMESTER[-1]) + sid)
     session.get('{}/mystudy32/login/senduser_rac.php?sid='.format(CAMPUSURL) + sid)
-    path = re.findall("URL=(start_session.php.*)'>$", session.get(
-        '{}/mystudy32/login/valid.php?PHPSESSID='.format(CAMPUSURL) + sid).text)[0]
+    session.get('{}/mystudy32/login/valid.php?PHPSESSID='.format(CAMPUSURL) + sid)
 
 
-#
 def get_courses(session):
     site = session.get('{}/mystudy32/stundenplan/stundenplan.php'.format(CAMPUSURL))
     sessid = re.findall("/stundenplan/stundenplan.php\?PHPSESSID=([^']*)'", site.text)[0]
     course_list = re.findall(
         "stundenplan_felder_text.*?>.<a href=\"javascript:myWindow\(1,([0-9]*),'[^']*'\)\">.([0-9]*)",
         site.text, re.DOTALL)
-    course_dict = {x[1]: "https://www.rheinahrcampus.de/mystudy32/seminarkarten/seminar_info.php?vid=" + x[
+    course_dict = {x[1]: "{}/mystudy32/seminarkarten/seminar_info.php?vid=".format(CAMPUSURL) + x[
         0] + "&PHPSESSID=" + sessid for x in course_list}
     return course_dict
 
@@ -90,7 +89,8 @@ def send_data(send_list, data):
     bot = Bot(BOTTOKEN)
     for file in send_list:
         try:
-            tag = "".join([re.findall('[a-zA-Z0-9]', x)[0] for x in file[0].split(" ")])
+            # Create tag from first letters
+            tag = "".join([re.findall(r'[^\w\d_]*', x, re.UNICODE)[0] for x in file[0].split(" ")])
             caption = '{} #{}\n{}'.format(file[0], tag, file[2]) if not file[2] == '' else '{} #{}'.format(file[0], tag)
             bot.sendDocument(chat_id=CHAT_ID if not DEBUG else TEST_ID,
                              document=open(
