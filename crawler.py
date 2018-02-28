@@ -148,15 +148,15 @@ def get_exams_data():
              \s*?    </td>
              \s*?    <td[^>]*>                   # 4. column
              \s*?        (?:\s|.)*?              # Any content incl. any whitespace
+             \s*?    </td>
              \s*?    <td[^>]*>                   # 5. column
-             \s*         (?P<state>.*?)          # Matches state as state
+             \s*         (?P<state>.*?)          # Matches content as state
              \s*?    </td>""", re.X)
     state = [m.groupdict() for m in regex.finditer(response.text)]
     return state
 
 
 def check_exams(data, exams):
-    print(exams)
     if 'exams' not in data:
         data['exams'] = {}
         for exam in exams:
