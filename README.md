@@ -23,7 +23,7 @@ Maybe parts work at other German universities with similar portals, but I don't 
 `mv secrets.py.default secrets.py && vim secrets.py`  
 This is a bit tricky, contact me if you have any questions.
 5. Create entry in `/etc/crontab` to execute script every three minutes  
-`echo "*/3 *   * * *   $USER   $PWD/venv/bin/python3 $PWD/crawler.py" | sudo tee --append /etc/crontab`
+`echo "*/3 *   * * *   $USER   $PWD/venv/bin/python $PWD/crawler.py" | sudo tee --append /etc/crontab`
 
 
 ## License

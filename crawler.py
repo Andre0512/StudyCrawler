@@ -111,7 +111,7 @@ def save_data(data):
 
 def check_schedule(data):
     response = requests.get(SCHEDULE)
-    pdf = './downloads/{}'.format(re.findall('^.*/(.*?\.pdf)$', SCHEDULE)[0])
+    pdf = os.path.join(os.path.dirname(__file__), './downloads/{}'.format(re.findall('^.*/(.*?\.pdf)$', SCHEDULE)[0]))
     with open(pdf, 'wb') as f:
         f.write(response.content)
     schedule_hash = hashlib.md5(open(pdf, 'rb').read()).hexdigest()
