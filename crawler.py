@@ -1,15 +1,16 @@
+import hashlib
 import html
 import json
 import logging
-import time
-
-import hashlib
 import os
 import re
+import time
+
 import requests
 from telegram import Bot, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 
-from secrets import *
+from secrets import BOTTOKEN, SEMESTER, EXAMSURL, PASSWORD, USERNAME, SCHEDULE, CAMPUSURL, CHAT_ID, CHECK_EXAMS, DEBUG, \
+    TEST_ID
 
 # TODO: Comments
 # TODO: Download password protected files
@@ -184,8 +185,9 @@ def main():
         stuff = get_file_list(session, course_dict)
         send_list = download(session, stuff, data)
         data = send_data(send_list, data)
-    exam_data = get_exams_data()
-    data = check_exams(data, exam_data)
+    if CHECK_EXAMS:
+        exam_data = get_exams_data()
+        data = check_exams(data, exam_data)
     data = check_schedule(data)
     save_data(data)
 
