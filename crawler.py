@@ -29,25 +29,32 @@ def load_data():
     return data
 
 
+def current_semester():
+    current = int(SEMESTER[-1][4:6]) * 2
+    current -= 3 if SEMESTER[-1][:4] == 'sose' else 2
+    return 'mystudy' + str(current)
+
+
 # Login to MyStudy webpage
 def login(session):
     payload = {'user': USERNAME,
                'password': PASSWORD}
     response = session.post('{}/rz/userauthLDAPwhs.php'.format(CAMPUSURL), data=payload)
     sid = re.findall('PHPSESSID=([^;]*);', response.headers['Set-Cookie'])[0]
-    session.get('{}/rz/login/content.php?'.format(CAMPUSURL) + sid)
-    session.get('{}/rz/login/tostudy{}.php?sid='.format(CAMPUSURL, SEMESTER[-1]) + sid)
-    session.get('{}/mystudy32/login/senduser_rac.php?sid='.format(CAMPUSURL) + sid)
-    session.get('{}/mystudy32/login/valid.php?PHPSESSID='.format(CAMPUSURL) + sid)
+    session.get('{}/rz/login/content.php?{}'.format(CAMPUSURL, sid))
+    session.get('{}/rz/login/tostudy{}.php?sid={}'.format(CAMPUSURL, SEMESTER[-1], sid))
+    session.get('{}/{}/login/senduser_rac.php?sid={}'.format(CAMPUSURL, current_semester(), sid))
+    x = session.get('{}/{}/login/valid.php?PHPSESSID={}'.format(CAMPUSURL, current_semester(), sid))
+    session.get('{}/{}/{}'.format(CAMPUSURL, current_semester(), re.findall("0; URL=([^']*)'.", x.text)[0]))
 
 
 def get_courses(session):
-    site = session.get('{}/mystudy32/stundenplan/stundenplan.php'.format(CAMPUSURL))
+    site = session.get('{}/{}/stundenplan/stundenplan.php'.format(CAMPUSURL, current_semester()))
     sessid = re.findall("/stundenplan/stundenplan.php\?PHPSESSID=([^']*)'", site.text)[0]
     course_list = re.findall(
         "stundenplan_felder_text.*?>.<a href=\"javascript:myWindow\(1,([0-9]*),'[^']*'\)\">.([0-9]*)",
         site.text, re.DOTALL)
-    course_dict = {x[1]: "{}/mystudy32/seminarkarten/seminar_info.php?vid=".format(CAMPUSURL) + x[
+    course_dict = {x[1]: "{}/{}/seminarkarten/seminar_info.php?vid=".format(CAMPUSURL, current_semester()) + x[
         0] + "&PHPSESSID=" + sessid for x in course_list}
     return course_dict
 
@@ -57,7 +64,7 @@ def get_file_list(session, course_dict):
     for key, value in course_dict.items():
         session.get(value)
         material = session.get(
-            '{}/mystudy32/seminarkarten/seminar_material.php?karte=material'.format(CAMPUSURL)).text
+            '{}/{}/seminarkarten/seminar_material.php?karte=material'.format(CAMPUSURL, current_semester())).text
         course = re.findall('<title>[0-9]* ([^<]*)</title>', material)[0]
         stuff += [[x[0], x[1], course, x[2], key] for x in
                   re.findall('a href="material_download\.php\?datei=([0-9]*)"><b>([^<]*)<.*?"top">([^<]*)</', material,
@@ -71,7 +78,7 @@ def download(session, stuff, data):
     for file in stuff:
         if not file[4] in data or not file[0] in data[file[4]]:
             r = session.post(
-                '{}/mystudy32/seminarkarten/material_download.php?datei={}'.format(CAMPUSURL, file[0]),
+                '{}/{}/seminarkarten/material_download.php?datei={}'.format(CAMPUSURL, current_semester(), file[0]),
                 payload, stream=True)
             if r.status_code == 200:
                 send_list.append([html.unescape(file[2]), file[1], html.unescape(file[3]), file[0], file[4]])
@@ -84,6 +91,11 @@ def download(session, stuff, data):
                     for chunk in r:
                         f.write(chunk)
     return send_list
+
+
+def logout(session):
+    sessid = session.cookies._cookies['www.rheinahrcampus.de']['/']['PHPSESSID'].value
+    session.get('{}/{}/login/logout.php?PHPSESSID={}'.format(CAMPUSURL, current_semester(), sessid))
 
 
 def send_data(send_list, data):
@@ -185,6 +197,7 @@ def main():
         stuff = get_file_list(session, course_dict)
         send_list = download(session, stuff, data)
         data = send_data(send_list, data)
+        logout(session)
     if CHECK_EXAMS:
         exam_data = get_exams_data()
         data = check_exams(data, exam_data)
