@@ -65,7 +65,7 @@ def get_file_list(session, course_dict):
         session.get(value)
         material = session.get(
             '{}/{}/seminarkarten/seminar_material.php?karte=material'.format(CAMPUSURL, current_semester())).text
-        course = re.findall('<title>[0-9]* ([^<]*)</title>', material)[0]
+        course = re.findall('<title>[0-9]* ([^<]*)</title>', material)[0].replace(' (Übung)', '')
         stuff += [[x[0], x[1], course, x[2], key] for x in
                   re.findall('a href="material_download\.php\?datei=([0-9]*)"><b>([^<]*)<.*?"top">([^<]*)</', material,
                              re.DOTALL)]
@@ -103,7 +103,7 @@ def send_data(send_list, data):
     for file in send_list:
         try:
             # Create tag from first letters
-            tag = "".join([re.findall(r'^I+|\w?', x, re.UNICODE)[0] for x in file[0].replace('(Übung)', '').split(" ")])
+            tag = "".join([re.findall(r'^I+|\w?', x, re.UNICODE)[0] for x in file[0].split(" ")])
             caption = '{} #{}\n{}'.format(file[0], tag, file[2]) if not file[2] == '' else '{} #{}'.format(file[0], tag)
             bot.sendDocument(chat_id=CHAT_ID if not DEBUG else TEST_ID,
                              document=open(
