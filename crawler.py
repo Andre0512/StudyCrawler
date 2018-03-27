@@ -103,7 +103,7 @@ def send_data(send_list, data):
     for file in send_list:
         try:
             # Create tag from first letters
-            tag = "".join([re.findall(r'[^\w\d_]*', x, re.UNICODE)[0] for x in file[0].split(" ")])
+            tag = "".join([re.findall(r'^I+|\w?', x, re.UNICODE)[0] for x in file[0].replace('(Übung)', '').split(" ")])
             caption = '{} #{}\n{}'.format(file[0], tag, file[2]) if not file[2] == '' else '{} #{}'.format(file[0], tag)
             bot.sendDocument(chat_id=CHAT_ID if not DEBUG else TEST_ID,
                              document=open(
